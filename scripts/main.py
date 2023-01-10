@@ -17,7 +17,7 @@ import zipfile
 # ----------------------------------------------------------------------------------------------------------------------
 # - Support Stuff -
 # ----------------------------------------------------------------------------------------------------------------------
-EXCEL_HEADERS:list[str] = ["parent_item", "custom_model_data", "model", "model_location"]
+EXCEL_HEADERS:list[str] = ["parent_item", "custom_model_data", "model", "model_location", "link"]
 
 @dataclasses.dataclass(slots=True)
 class CustomModel:
@@ -51,7 +51,7 @@ def process_excel(excel_file:pathlib.Path) -> dict[str,list[CustomModel]]:
     if set(excel_data.columns) != set(EXCEL_HEADERS):
         raise TypeError("Excel file does not satisfy the correct order of columns:")
 
-    for parent_item, cmd, model, model_location in pd.read_excel(excel_file).values:
+    for parent_item, cmd, model, model_location, *_ in pd.read_excel(excel_file).values:
         # Check the custom_model_data and cast to an int,
         #   because the json output has to use an int as well
         custom_model_data = int(cmd)
