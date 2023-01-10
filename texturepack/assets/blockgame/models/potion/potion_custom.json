@@ -1,0 +1,7 @@
+{
+	"parent":"item/generated",
+	"textures": {
+		"layer0": "blockgame:potion/potion_custom_overlay",
+		"layer1": "blockgame:potion/potion_custom"
+	}
+}

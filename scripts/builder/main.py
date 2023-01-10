@@ -18,7 +18,7 @@ import zipfile
 # - Support Stuff -
 # ----------------------------------------------------------------------------------------------------------------------
 EXCEL_HEADERS:list[str] = [
-    "original_item", "custom_model_data", "location", "internal_name", "link_to_bbmodel", "link_to_texture", "command"
+    "original_item", "parent", "textures", "custom_model_data", "location", "internal_name", "link_to_bbmodel", "link_to_texture", "command"
 ]
 SETTINGS_PATH = pathlib.Path("scripts/builder/settings.json")
 
@@ -26,10 +26,28 @@ SETTINGS_PATH = pathlib.Path("scripts/builder/settings.json")
 class CustomModel:
     custom_model_data:int
     location:str
-    original_item:str
 
     def output_overrides(self) -> dict:
         return {"predicate": {"custom_model_data":self.custom_model_data}, "model": self.location}
+
+@dataclasses.dataclass(slots=True)
+class OriginalItem:
+    original_item_name:str
+    textures_string:dataclasses.InitVar[str]
+    parent:str
+
+    # Non init args
+    textures:dict = dataclasses.field(init=False)
+
+    def __post_init__(self,textures_string:str):
+        self.textures = json.loads(textures_string.replace("'",'"'))
+
+    def __hash__(self):
+        # hash on the original item name,
+        #   all other values should be the same
+        return hash(self.original_item_name)
+
+
 
 # ----------------------------------------------------------------------------------------------------------------------
 # - Functionality -
@@ -41,9 +59,9 @@ def pack_cleaner(original_folder:pathlib.Path) -> None:
         if file.is_file() and file.name.endswith(".json"):
             file.unlink()
 
-def process_excel(excel_file:pathlib.Path) -> dict[str,list[CustomModel]]:
+def process_excel(excel_file:pathlib.Path) -> dict[OriginalItem,list[CustomModel]]:
     # Create some basic objects we'll need
-    data:dict[str,list[CustomModel]] = {}
+    data:dict[OriginalItem,list[CustomModel]] = {}
     assigned_custom_model_data:list[int] = []
 
     # Read the Excel file
@@ -53,7 +71,7 @@ def process_excel(excel_file:pathlib.Path) -> dict[str,list[CustomModel]]:
     if set(cols:=excel_data.columns) != set(EXCEL_HEADERS):
         raise TypeError(f"Excel file does not satisfy the correct order of columns:\n{EXCEL_HEADERS}\nvs\n{cols}")
 
-    for original_item, cmd, location, *_ in pd.read_excel(excel_file).values:
+    for original, parent, textures_string, cmd, location, *_ in pd.read_excel(excel_file).values:
         # Check the custom_model_data and cast to an int,
         #   because the json output has to use an int as well
         custom_model_data = int(cmd)
@@ -62,24 +80,33 @@ def process_excel(excel_file:pathlib.Path) -> dict[str,list[CustomModel]]:
 
         # Makes sure the parent item is present in the data dict
         #   Without this, we'd have to have a couple more if checks, while now dict handles it
+        original_item = OriginalItem(
+            original_item_name=original,
+            textures_string=textures_string,
+            parent=parent
+        )
         data.setdefault(original_item, [])
 
         # Create model and store
         data[original_item].append(CustomModel(
             custom_model_data=custom_model_data,
             location=location,
-            original_item=original_item
         ))
 
     return data
 
-def create_json_files(original_folder:pathlib.Path, data:dict[str,list[CustomModel]]):
+def create_json_files(original_folder:pathlib.Path, data:dict[OriginalItem,list[CustomModel]]):
     for original_item, custom_models in data.items():
-        with open(original_folder.joinpath(f"assets/minecraft/models/{original_item.split(':')[-1]}.json"), "w+") as file:
+
+        path = original_folder.joinpath(
+            f"assets/minecraft/models/{original_item.original_item_name.split(':')[-1]}.json"
+        )
+
+        with open(path, "w+") as file:
             file.write(json.dumps(
                 {
-                    "parent": f"item/generated",
-                    "textures": {"layer0":original_item},
+                    "parent": original_item.parent,
+                    "textures": original_item.textures,
                     "overrides": [model.output_overrides() for model in custom_models]
                 },
                 indent=2
@@ -123,7 +150,7 @@ def main():
     )
 
     # Extract the Excel data
-    excel_data:dict[str,list[CustomModel]] = process_excel(
+    excel_data:dict[OriginalItem,list[CustomModel]] = process_excel(
         excel_file=pathlib.Path("data/custom_models.xlsx")
     )
 

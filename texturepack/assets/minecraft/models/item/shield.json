@@ -1,0 +1,14 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "item/shield"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "custom_model_data": 3
+      },
+      "model": "blockgame:shield/shield_copper"
+    }
+  ]
+}
