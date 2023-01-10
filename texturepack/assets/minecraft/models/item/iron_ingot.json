@@ -1,7 +1,17 @@
 {
-	"parent": "item/iron_ingot",
-
-	"overrides": [
-		{"predicate": {"custom_model_data":123456789}, "model": "item/custom/backpack"}
-	]
+  "parent": "item/iron_ingot",
+  "overrides": [
+    {
+      "predicate": {
+        "custom_model_data": 123456789
+      },
+      "model": "item/custom/backpack"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 123456780
+      },
+      "model": "item/custom/backpack"
+    }
+  ]
 }
