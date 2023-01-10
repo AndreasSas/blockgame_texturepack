@@ -17,7 +17,10 @@ import zipfile
 # ----------------------------------------------------------------------------------------------------------------------
 # - Support Stuff -
 # ----------------------------------------------------------------------------------------------------------------------
-EXCEL_HEADERS:list[str] = ["parent_item", "custom_model_data", "model", "model_location", "link"]
+EXCEL_HEADERS:list[str] = [
+    "parent_item", "custom_model_data", "model", "model_location", "internal_name", "link_to_bbmodel", "link_to_texture"
+]
+SETTINGS_PATH = pathlib.Path("scripts/builder/settings.json")
 
 @dataclasses.dataclass(slots=True)
 class CustomModel:
@@ -113,10 +116,16 @@ def pack_assembler(original_folder:pathlib.Path, output_file:pathlib.Path, *, ex
 # ----------------------------------------------------------------------------------------------------------------------
 # - Code -
 # ----------------------------------------------------------------------------------------------------------------------
-def main(original_folder:pathlib.Path,output_file:pathlib.Path):
+def main():
+    if not SETTINGS_PATH.exists():
+        raise FileNotFoundError(SETTINGS_PATH)
+
+    with open(SETTINGS_PATH, "r") as file:
+        settings = json.load(file)
+
     # Cleans the pack
     pack_cleaner(
-        original_folder=original_folder
+        original_folder=pathlib.Path(settings["original_folder"])
     )
 
     # Extract the Excel data
@@ -126,21 +135,18 @@ def main(original_folder:pathlib.Path,output_file:pathlib.Path):
 
     # Processes the data and creates the correct json files
     create_json_files(
-        original_folder=original_folder,
+        original_folder=pathlib.Path(settings["original_folder"]),
         data=excel_data
     )
 
     # Pack the completed
+    version_str = '.'.join(str(v) for v in settings["version"])
     pack_assembler(
-        original_folder=original_folder,
-        output_file=output_file,
-        excluded_filetypes=(".bbmodel",),
+        original_folder=pathlib.Path(settings["original_folder"]),
+        output_file=pathlib.Path(settings["output_file".format(version_str=version_str)]),
+        excluded_filetypes=settings["excluded_files"],
         overwrite=True
     )
 
 if __name__ == '__main__':
-    version = ("0", "0", "2")
-    main(
-        original_folder=pathlib.Path("texturepack/"),
-        output_file=pathlib.Path(f"output/blockgame_{'.'.join(str(v) for v in version)}.zip")
-    )
+    main()
