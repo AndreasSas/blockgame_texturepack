@@ -2,9 +2,5 @@
 	"parent":"item/generated",
 	"textures": {
 		"layer0": "blockgame:bone_animated/bone_animated"
-	},
-	"animation":{
-        "interpolate":true,
-        "frametime":1
-    }
+	}
 }
