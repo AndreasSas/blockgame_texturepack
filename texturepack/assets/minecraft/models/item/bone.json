@@ -6,9 +6,9 @@
   "overrides": [
     {
       "predicate": {
-        "custom_model_data": 547746584
+        "custom_model_data": 2
       },
-      "model": "item/bone_animated/bone_animated"
+      "model": "blockgame:bone_animated/bone_animated"
     }
   ]
 }

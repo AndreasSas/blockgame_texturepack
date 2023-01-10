@@ -18,13 +18,12 @@ import zipfile
 # - Support Stuff -
 # ----------------------------------------------------------------------------------------------------------------------
 EXCEL_HEADERS:list[str] = [
-    "type","original_item", "custom_model_data", "location", "internal_name", "link_to_bbmodel", "link_to_texture", "command"
+    "original_item", "custom_model_data", "location", "internal_name", "link_to_bbmodel", "link_to_texture", "command"
 ]
 SETTINGS_PATH = pathlib.Path("scripts/builder/settings.json")
 
 @dataclasses.dataclass(slots=True)
 class CustomModel:
-    type_:str
     custom_model_data:int
     location:str
     original_item:str
@@ -54,7 +53,7 @@ def process_excel(excel_file:pathlib.Path) -> dict[str,list[CustomModel]]:
     if set(cols:=excel_data.columns) != set(EXCEL_HEADERS):
         raise TypeError(f"Excel file does not satisfy the correct order of columns:\n{EXCEL_HEADERS}\nvs\n{cols}")
 
-    for type_, original_item, cmd, location, *_ in pd.read_excel(excel_file).values:
+    for original_item, cmd, location, *_ in pd.read_excel(excel_file).values:
         # Check the custom_model_data and cast to an int,
         #   because the json output has to use an int as well
         custom_model_data = int(cmd)
@@ -67,7 +66,6 @@ def process_excel(excel_file:pathlib.Path) -> dict[str,list[CustomModel]]:
 
         # Create model and store
         data[original_item].append(CustomModel(
-            type_=type_,
             custom_model_data=custom_model_data,
             location=location,
             original_item=original_item

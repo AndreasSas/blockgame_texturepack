@@ -6,9 +6,9 @@
   "overrides": [
     {
       "predicate": {
-        "custom_model_data": 123456789
+        "custom_model_data": 1
       },
-      "model": "item/backpack/backpack"
+      "model": "blockgame:backpack/backpack"
     }
   ]
 }

@@ -1,7 +1,7 @@
 {
-	"parent":"item/handheld",
+	"parent":"item/generated",
 	"textures": {
-		"layer0": "item/bone_animated/bone_animated"
+		"layer0": "blockgame:bone_animated/bone_animated"
 	},
 	"animation":{
         "interpolate":true,
