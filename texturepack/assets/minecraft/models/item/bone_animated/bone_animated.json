@@ -1,0 +1,10 @@
+{
+	"parent":"item/handheld",
+	"textures": {
+		"layer0": "item/bone_animated/bone_animated"
+	},
+	"animation":{
+        "interpolate":true,
+        "frametime":1
+    }
+}

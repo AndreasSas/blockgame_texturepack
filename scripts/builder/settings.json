@@ -2,6 +2,9 @@
   "version": ["0","0","3"],
   "excluded_files": [".bbmodel", ".aseprite"],
   "original_folder": "texturepack/",
-  "output_file": "output/blockgame_{version_str}.zip"
+  "output_files": [
+    "output/blockgame_{version_str}.zip",
+    "C:\\Users\\AthenaAdmin\\AppData\\Roaming\\.minecraft\\resourcepacks\\blockgame_{version_str}.zip"
+  ]
 
 }
