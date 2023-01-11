@@ -1,5 +1,5 @@
 {
-  "parent": "item/generated",
+  "parent": "item/ice",
   "textures": {
     "layer0": "item/potion_overlay",
     "layer1": "item/potion"

@@ -1,9 +1,9 @@
 {
-	"credit": "Made by Wh4I3, in Blockbench",
+	"credit": "Made with Blockbench",
 	"texture_size": [64, 64],
 	"textures": {
-		"0": "blockgame:backpack",
-		"particle": "blockgame:backpack"
+		"0": "blockgame:backpack/backpack",
+		"particle": "blockgame:backpack/backpack"
 	},
 	"elements": [
 		{
@@ -240,8 +240,6 @@
 			"name": "Rails",
 			"origin": [8, 8, 8],
 			"color": 0,
-			"nbt": "{}",
-			"armAnimationEnabled": false,
 			"children": [6, 7, 8, 9, 10, 11, 12, 13]
 		},
 		{

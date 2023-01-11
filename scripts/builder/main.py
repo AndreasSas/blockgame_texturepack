@@ -3,51 +3,32 @@
 # ----------------------------------------------------------------------------------------------------------------------
 # General Packages
 from __future__ import annotations
-import dataclasses
 import json
 import os
-import pandas as pd
 import pathlib
 import zipfile
 
 # Athena Packages
 
 # Local Imports
+from excel_automation.models import CustomModel, OriginalItem, ModelType
+from excel_automation.excel_processor import process_excel
 
 # ----------------------------------------------------------------------------------------------------------------------
 # - Support Stuff -
 # ----------------------------------------------------------------------------------------------------------------------
 EXCEL_HEADERS:list[str] = [
-    "original_item", "parent", "textures", "custom_model_data", "location", "internal_name", "link_to_bbmodel", "link_to_texture", "command"
+    "original_item",
+    "parent",
+    "textures",
+    "custom_model_data",
+    "location",
+    "internal_name",
+    "link_to_bbmodel",
+    "link_to_texture",
+    "command",          # Auto generated and only useful in-game
 ]
 SETTINGS_PATH = pathlib.Path("scripts/builder/settings.json")
-
-@dataclasses.dataclass(slots=True)
-class CustomModel:
-    custom_model_data:int
-    location:str
-
-    def output_overrides(self) -> dict:
-        return {"predicate": {"custom_model_data":self.custom_model_data}, "model": self.location}
-
-@dataclasses.dataclass(slots=True)
-class OriginalItem:
-    original_item_name:str
-    textures_string:dataclasses.InitVar[str]
-    parent:str
-
-    # Non init args
-    textures:dict = dataclasses.field(init=False)
-
-    def __post_init__(self,textures_string:str):
-        self.textures = json.loads(textures_string.replace("'",'"'))
-
-    def __hash__(self):
-        # hash on the original item name,
-        #   all other values should be the same
-        return hash(self.original_item_name)
-
-
 
 # ----------------------------------------------------------------------------------------------------------------------
 # - Functionality -
@@ -59,47 +40,11 @@ def pack_cleaner(original_folder:pathlib.Path) -> None:
         if file.is_file() and file.name.endswith(".json"):
             file.unlink()
 
-def process_excel(excel_file:pathlib.Path) -> dict[OriginalItem,list[CustomModel]]:
-    # Create some basic objects we'll need
-    data:dict[OriginalItem,list[CustomModel]] = {}
-    assigned_custom_model_data:list[int] = []
-
-    # Read the Excel file
-    #   and process the data
-    excel_data:pd.DataFrame = pd.read_excel(excel_file)
-
-    if set(cols:=excel_data.columns) != set(EXCEL_HEADERS):
-        raise TypeError(f"Excel file does not satisfy the correct order of columns:\n{EXCEL_HEADERS}\nvs\n{cols}")
-
-    for original, parent, textures_string, cmd, location, *_ in pd.read_excel(excel_file).values:
-        # Check the custom_model_data and cast to an int,
-        #   because the json output has to use an int as well
-        custom_model_data = int(cmd)
-        if custom_model_data in assigned_custom_model_data:
-            raise ValueError(f"Duplicate custom_model_data id found of: {custom_model_data}")
-
-        # Makes sure the parent item is present in the data dict
-        #   Without this, we'd have to have a couple more if checks, while now dict handles it
-        original_item = OriginalItem(
-            original_item_name=original,
-            textures_string=textures_string,
-            parent=parent
-        )
-        data.setdefault(original_item, [])
-
-        # Create model and store
-        data[original_item].append(CustomModel(
-            custom_model_data=custom_model_data,
-            location=location,
-        ))
-
-    return data
-
 def create_json_files(original_folder:pathlib.Path, data:dict[OriginalItem,list[CustomModel]]):
     for original_item, custom_models in data.items():
 
         path = original_folder.joinpath(
-            f"assets/minecraft/models/{original_item.original_item_name.split(':')[-1]}.json"
+            f"assets/minecraft/models/{original_item.minecraft_item.split(':')[-1]}.json"
         )
 
         with open(path, "w+") as file:
@@ -107,7 +52,7 @@ def create_json_files(original_folder:pathlib.Path, data:dict[OriginalItem,list[
                 {
                     "parent": original_item.parent,
                     "textures": original_item.textures,
-                    "overrides": [model.output_overrides() for model in custom_models]
+                    "overrides": [model.output_predicate() for model in custom_models]
                 },
                 indent=2
             ))
@@ -128,7 +73,7 @@ def pack_assembler(original_folder:pathlib.Path, output_files:list[pathlib.Path]
                     files
                 ):
                     # Writes to zip
-                    #   arcname is used to define a new path to put the file under. We stripped the base folder out of this
+                    #   arcname is used to define a new file_path to put the file under. We stripped the base folder out of this
                     zip_file.write(
                         filename = (full_path := os.path.join(root, file)),
                         arcname = pathlib.Path(*pathlib.Path(full_path).parts[1:])
